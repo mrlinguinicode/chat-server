@@ -2,7 +2,7 @@
   (:gen-class)
   (:require [org.httpkit.server :as server]
             [clojure.tools.logging :refer [info]]
-            [clojure.data.json :refer [json-str read-json]]
+            [clojure.data.json :refer [json-str read-json read-str]]
             [compojure.core :refer [defroutes GET POST]]
             [compojure.route :refer [files not-found]]
             [compojure.handler :refer [site]]))
@@ -28,10 +28,12 @@
                      :author "system"}]))
 
 (defn mesg-received [msg]
-  (let [data (read-json msg)]
+  (println (read-str msg))
+  (let [data (read-str msg)]
     (info "mesg received" data)
-    (when (:msg data)
-      (let [data (merge data {:time (now) :id (next-id)})]
+    (println (:msg data))
+    (when (data)
+      (let [data (merge {:msg data} {:time (now) :id (next-id)})]
         (dosync
          (let [all-msgs* (conj @all-msgs data)
                total (count all-msgs*)]

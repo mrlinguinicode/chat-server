@@ -5,9 +5,6 @@
 ; Happy coding! ♥️
 
 ; Jacking in...
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- with-profile +uberjar repl :headless
-; Interrupting Jack-in process.
-; Jacking in...
 ; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
 ; Hooking up nREPL sessions...
 ; Connected session: clj
@@ -21,18 +18,8 @@
 clj꞉chat-server.core꞉>  ; Use `alt+enter` to evaluate
 ; Jack-in done.
 clj꞉chat-server.core꞉> 
-(now)
-; Syntax error compiling at (.calva/output-window/output.calva-repl:24:1).
-; Unable to resolve symbol: now in this context
-clj꞉chat-server.core꞉> 
-(defn now
-  "quot perfroms division"
-  []
-  (quot (System/currentTimeMillis) 1000))
-#'chat-server.core/now
-clj꞉chat-server.core꞉> 
-(now)
-1652755247
+(-main)
+nil
 clj꞉chat-server.core꞉> 
 ; nREPL Connection was closed
 ; Jacking in...
@@ -48,174 +35,9 @@ clj꞉chat-server.core꞉> 
 ;   - Clojure lines in stack traces are peekable and clickable.
 clj꞉chat-server.core꞉> 
 ; Jack-in done.
-clj꞉chat-server.core꞉>  (println (server/as-channel))
-; nREPL Connection was closed
-; Jacking in...
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
-; Hooking up nREPL sessions...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-clj꞉chat-server.core꞉> 
-; Jack-in done.
-clj꞉chat-server.core꞉> 
-; Syntax error compiling at (.calva/output-window/output.calva-repl:51:34).
-; No such namespace: server
-clj꞉chat-server.core꞉>  (defn now
-                          "quot perfroms division"
-                          []
-                          (quot (System/currentTimeMillis) 1000))
-
-(def clients (atom {}))
-
-(let [msg-id (atom 0)]
-  (defn next-id
-    "increases msg id"
-    []
-    (swap! msg-id inc)))
-
-(def all-msgs (ref [{:id (next-id)
-                     :time (now)
-                     :msg "this is a live chatroom, have fun"
-                     :author "system"}]))
-
-(defn mesg-received [msg]
-  (let [data (read-json msg)]
-    (info "mesg received" data)
-    (when (:msg data)
-      (let [data (merge data {:time (now) :id (next-id)})]
-        (dosync
-         (let [all-msgs* (conj @all-msgs data)
-               total (count all-msgs*)]
-           (if (> total 100)
-             (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
-             (ref-set all-msgs all-msgs*)))))
-      (doseq [client (keys @clients)]
-        (server/send! client (json-str @all-msgs))))))
-
-(defn chat-handler [req]
-  (server/as-channel req
-                     {:on-open (fn [ch]
-                                 (info ch "connected")
-                                 (swap! clients assoc ch true))
-                      :on-receive (fn [ch msg]
-                                    (mesg-received msg))
-                      :on-close (fn [ch status]
-                                  (swap! clients dissoc ch)
-                                  (info ch "closed, status" status))}))
-
-(defroutes chatroom
-  (GET "/ws" [] chat-handler))
-
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (server/run-server chatroom {:port 9889})
-  (info "server started. http://127.0.0.1:9889"))
-; Syntax error compiling at (.calva/output-window/output.calva-repl:119:3).
-; No such namespace: server
-clj꞉chat-server.core꞉> 
-; nREPL Connection was closed
-; Jacking in...
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
-; Hooking up nREPL sessions...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-clj꞉chat-server.core꞉> 
-; Jack-in done.
-clj꞉chat-server.core꞉> 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (server/run-server chatroom {:port 9889})
-  (info "server started. http://127.0.0.1:9889"))
-; Syntax error compiling at (.calva/output-window/output.calva-repl:142:3).
-; No such namespace: server
-clj꞉chat-server.core꞉> 
-(ns)
-; Syntax error macroexpanding clojure.core/ns at (.calva/output-window/output.calva-repl:147:1).
-; () - failed: Insufficient input at: [:ns-name] spec: :clojure.core.specs.alpha/ns-form
-clj꞉chat-server.core꞉> 
-; nREPL Connection was closed
-; Jacking in...
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
-; Hooking up nREPL sessions...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-clj꞉chat-server.core꞉> 
-; Jack-in done.
-clj꞉chat-server.core꞉>  (-main)
-; Syntax error compiling at (.calva/output-window/output.calva-repl:165:24).
-; Unable to resolve symbol: -main in this context
-clj꞉chat-server.core꞉> 
-; Syntax error compiling at (.calva/output-window/output.calva-repl:165:25).
-; Unable to resolve symbol: -main in this context
-clj꞉chat-server.core꞉> 
-; nREPL Connection was closed
-; Jacking in...
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
-; Hooking up nREPL sessions...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-clj꞉chat-server.core꞉> 
-; Jack-in done.
-clj꞉chat-server.core꞉> 
-; Syntax error compiling at (.calva/output-window/output.calva-repl:165:25).
-; Unable to resolve symbol: -main in this context
-clj꞉chat-server.core꞉> 
-; Evaluating file: core.clj
-; Syntax error (FileNotFoundException) compiling at (src/chat_server/core.clj:1:1).
-; Could not locate clojure/tools/logging__init.class, clojure/tools/logging.clj or clojure/tools/logging.cljc on classpath.
-; Evaluation of file core.clj failed: class clojure.lang.Compiler$CompilerException
-clojure.lang.Compiler/load (Compiler.java:7652)
-chat-server.core/eval6514 (form-init2258132858057861937.clj:1)
-clojure.lang.Compiler/eval (Compiler.java:7181)
-clojure.core/eval (core.clj:3202)
-clojure.core/eval (core.clj:3198)
-nrepl.middleware.interruptible-eval/evaluate (interruptible_eval.clj:87)
-clojure.core/apply (core.clj:667)
-clojure.core/with-bindings* (core.clj:1977)
-nrepl.middleware.interruptible-eval/evaluate (interruptible_eval.clj:87)
-clojure.main/repl (main.clj:437)
-clojure.main/repl (main.clj:458)
-clojure.main/repl (main.clj:368)
-nrepl.middleware.interruptible-eval/evaluate (interruptible_eval.clj:84)
-nrepl.middleware.interruptible-eval/evaluate (interruptible_eval.clj:56)
-nrepl.middleware.interruptible-eval/interruptible-eval (interruptible_eval.clj:152)
-nrepl.middleware.session/session-exec (session.clj:218)
-nrepl.middleware.session/session-exec (session.clj:217)
-java.lang.Thread/run (Thread.java:833)
-clj꞉chat-server.core꞉> 
-; Syntax error (ClassNotFoundException) compiling at (.calva/output-window/output.calva-repl:211:22).
-; Thread.java:833
 clj꞉chat-server.core꞉> 
 (-main)
-; Syntax error compiling at (.calva/output-window/output.calva-repl:216:1).
-; Unable to resolve symbol: -main in this context
+nil
 clj꞉chat-server.core꞉> 
 ; nREPL Connection was closed
 ; Jacking in...
@@ -231,52 +53,78 @@ clj꞉chat-server.core꞉> 
 ;   - Clojure lines in stack traces are peekable and clickable.
 clj꞉chat-server.core꞉> 
 ; Jack-in done.
-clj꞉chat-server.core꞉> 
-(in-ns chat-server.core)
-; Syntax error (ClassNotFoundException) compiling at (.calva/output-window/output.calva-repl:235:1).
-; chat-server.core
-clj꞉chat-server.core꞉> 
-lein run
-; Syntax error compiling at (.calva/output-window/output.calva-repl:1:7937).
-; Unable to resolve symbol: run in this context
-clj꞉chat-server.core꞉> 
-; nREPL Connection was closed
-; Jacking in...
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
-; Hooking up nREPL sessions...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-clj꞉chat-server.core꞉> 
-; Jack-in done.
-clj꞉chat-server.core꞉>  (-main)
-nil
-clj꞉chat-server.core꞉>  (println @clients)
-; Execution error (ArityException) at chat-server.core/eval11667 (form-init5642519527952087183.clj:259).
-; Wrong number of args (0) passed to: clojure.lang.PersistentArrayMap
-clj꞉chat-server.core꞉>  (println @clients)
-{}
-nil
 clj꞉chat-server.core꞉> 
 (-main)
-; Execution error (BindException) at sun.nio.ch.Net/bind0 (Net.java:-2).
-; Address already in use
+nil
 clj꞉chat-server.core꞉> 
-(println @clients)
-{#object[org.httpkit.server.AsyncChannel 0x545083bf /127.0.0.1:9889<->/127.0.0.1:37854] true}
+(println @all-msgs)
+[{:id 1, :time 1652842491, :msg this is a live chatroom, have fun, :author system}]
 nil
 clj꞉chat-server.core꞉> 
 (println @clients)
-{#object[org.httpkit.server.AsyncChannel 0x545083bf /127.0.0.1:9889<->/127.0.0.1:37854] true}
-nil
-clj꞉chat-server.core꞉> 
-(println @clients)
-{#object[org.httpkit.server.AsyncChannel 0x545083bf /127.0.0.1:9889<->/127.0.0.1:37854] true, #object[org.httpkit.server.AsyncChannel 0xb22bbfe /127.0.0.1:9889<->/127.0.0.1:37870] true}
+{#object[org.httpkit.server.AsyncChannel 0x4c4af291 /127.0.0.1:9889<->/127.0.0.1:43300] true, #object[org.httpkit.server.AsyncChannel 0x27f36761 /127.0.0.1:9889<->/127.0.0.1:43302] true, #object[org.httpkit.server.AsyncChannel 0x628334a6 /127.0.0.1:9889<->/127.0.0.1:43840] true, #object[org.httpkit.server.AsyncChannel 0x2d1b08ff /127.0.0.1:9889<->/127.0.0.1:43842] true}
 nil
 clj꞉chat-server.core꞉> 
 ; nREPL Connection was closed
+; Jacking in...
+; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
+; Hooking up nREPL sessions...
+; Connected session: clj
+; TIPS:
+;   - You can edit the contents here. Use it as a REPL if you like.
+;   - `alt+enter` evaluates the current top level form.
+;   - `ctrl+enter` evaluates the current form.
+;   - `alt+up` and `alt+down` traverse up and down the REPL command history
+;      when the cursor is after the last contents at the prompt
+;   - Clojure lines in stack traces are peekable and clickable.
+clj꞉chat-server.core꞉> 
+; Jack-in done.
+clj꞉chat-server.core꞉> 
+(-main)
+nil
+clj꞉chat-server.core꞉> 
+; nREPL Connection was closed
+; Jacking in...
+; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- repl :headless
+; Hooking up nREPL sessions...
+; Connected session: clj
+; TIPS:
+;   - You can edit the contents here. Use it as a REPL if you like.
+;   - `alt+enter` evaluates the current top level form.
+;   - `ctrl+enter` evaluates the current form.
+;   - `alt+up` and `alt+down` traverse up and down the REPL command history
+;      when the cursor is after the last contents at the prompt
+;   - Clojure lines in stack traces are peekable and clickable.
+clj꞉chat-server.core꞉> 
+; Jack-in done.
+clj꞉chat-server.core꞉> 
+(-main)
+nil
+;; => nil
+
+clj꞉chat-server.core꞉> 
+nil
+; nREPL Connection was closed
+; Jacking in...
+; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"0.9.0"]' -- update-in :dependencies conj '[cider/piggieback,"0.5.3"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.27.4"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.piggieback/wrap-cljs-repl"]' -- repl :headless
+; Hooking up nREPL sessions...
+; Connected session: clj
+; TIPS:
+;   - You can edit the contents here. Use it as a REPL if you like.
+;   - `alt+enter` evaluates the current top level form.
+;   - `ctrl+enter` evaluates the current form.
+;   - `alt+up` and `alt+down` traverse up and down the REPL command history
+;      when the cursor is after the last contents at the prompt
+;   - Clojure lines in stack traces are peekable and clickable.
+clj꞉chat-server.core꞉> 
+; Creating cljs repl session...
+; Connecting cljs repl: Leiningen + Figwheel Main...
+;   The Calva Connection Log might have more connection progress information.
+; There are no figwheel build files (.cljs.edn) in the project directory.
+; Connection to Figwheel Main aborted.
+; Error while connecting cljs REPL: Aborted
+; Jack-in done.
+clj꞉chat-server.core꞉> 
+(-main)
+nil
+clj꞉chat-server.core꞉> 
