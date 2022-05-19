@@ -4,8 +4,10 @@
             [clojure.tools.logging :refer [info]]
             [clojure.data.json :refer [json-str read-json read-str]]
             [compojure.core :refer [defroutes GET POST]]
+            [cheshire.core :as json]
             [compojure.route :refer [files not-found]]
             [compojure.handler :refer [site]]))
+
 
 
 
@@ -24,16 +26,14 @@
 
 (def all-msgs (ref [{:id (next-id)
                      :time (now)
-                     :msg "this is a live chatroom, have fun"
+                     :message "this is a live chatroom, have fun"
                      :author "system"}]))
 
 (defn mesg-received [msg]
-  (println (read-str msg))
-  (let [data (read-str msg)]
+  (let [data (json/parse-string msg true)]
     (info "mesg received" data)
-    (println (:msg data))
-    (when (data)
-      (let [data (merge {:msg data} {:time (now) :id (next-id)})]
+    (when (:message data)
+      (let [data (merge data {:time (now) :id (next-id)})]
         (dosync
          (let [all-msgs* (conj @all-msgs data)
                total (count all-msgs*)]
@@ -46,7 +46,7 @@
 (defn chat-handler [req]
   (server/as-channel req
                      {:on-open (fn [ch]
-                                 (info ch "connected")
+                                 (println ch "connected")
                                  (swap! clients assoc ch true))
                       :on-receive (fn [ch msg]
                                     (mesg-received msg))

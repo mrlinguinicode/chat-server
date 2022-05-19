@@ -9,7 +9,8 @@
                  [org.clojure/tools.logging "1.2.4"]
                  [org.clojure/data.json "2.4.0"]
                  [http-kit "2.5.3"]
-                 [ring "1.9.0"]]
+                 [ring "1.9.0"]
+                 [cheshire "5.10.2"]]
   :main ^:skip-aot chat-server.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
